@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>赛程列表</title>
+		<script type="text/javascript" src="../../js/jquery-1.11.1.js"></script>
+		<script src="../../js/global.js"></script>
+    	<script type="text/javascript" src="../../js/bootstrap.js" ></script>
+    	<link  rel="stylesheet" type="text/css" href="../../css/bootstrap.css"></link>
+    	<link  rel="stylesheet" type="text/css" href="../../css/style.css"></link>
+		<style>
+			span{
+				color: #1EABFF;
+				padding: 0 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<form id="myForm" class="form-horizontal">
+			<h2>超级管理员专属——用户操作</h2>
+			<div class="searchDiv">
+				<button class="btn btn-danger" id="deletes">批量删除</button>
+				<a href="add.html" class="btn btn-success">添加</a>
+				用户名:<input name="loginName" placeholder="用户名"/>
+				用户昵称:<input name="petName" placeholder="用户昵称"/>
+				手机号:<input name="phone" placeholder="手机号"/>
+				管理角色:<select name="roleId">
+					<option value="-1">选择管理角色</option>
+					<option value="1">超级管理员</option>
+					<option value="2">球队经理</option>
+					<option value="3">主教练</option>
+				</select>
+				<button type="button" onclick="loadData()" class="btn btn-info">查询</button>
+				<button type="reset" class="btn btn-warning">重置</button>
+			</div>
+			<table class="table table-bordered table-striped">
+				<thead>
+					<tr>
+						<th>全选<input type="checkbox" id="all"/></th>
+						<th>头像</th>
+						<th>用户名</th>
+						<th>用户昵称</th>
+						<th>密码</th>
+						<th>手机号</th>
+						<th>管理角色</th>
+						<th>状态</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody id="tboby">
+					<tr>
+						<td><input type="checkbox" name="one"/></td>
+						<td><img  src="../../img/logo/rect/20.jpg"/></td>
+						<td>小可爱</td>
+						<td>无敌小可爱</td>
+						<td>123456</td>
+						<td>13677774444</td>
+						<td>超级管理员</td>
+						<td>正常</td>
+						<td>
+							<button class="btn btn-sm btn-danger">删除</button>
+							<button class="btn btn-sm btn-info">更新</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<!--分页部分-->
+			<div class="form-group">
+				<div class="col-sm-3" style="text-align: right">
+					<ul class="pagination" style="margin: 0;">
+						<li name="pageLi" id="firstPage"><a href="#">首页</a></li>
+						<li name="pageLi" id="prePage"><a href="#">上一页</a></li>
+						<li name="pageLi" id="nextPage"><a href="#">下一页</a></li>
+						<li name="pageLi" id="lastPage"><a href="#">末页</a></li>
+					</ul>
+				</div>
+				<label class="control-label col-sm-3" style="text-align: right" >
+					共<span id="total"></span>条数据，共<span id="pages"></span>页
+				</label>
+				<label class="control-label col-sm-1" style="text-align: right" >
+					每页显示
+				</label>
+				<div   class="col-sm-1" style="text-align: right; padding:0;margin: 0" >
+					<select class="form-control" name="pageSize">
+						<option value="5">5</option>
+						<option value="10">10</option>
+						<option value="15">15</option>
+					</select>
+				</div>
+				<label class="control-label col-sm-1" style="text-align: left;width: 87px;padding: 8px 5px;" >
+					条数据
+				</label>
+				<label class="control-label col-sm-1" style="text-align: right" >
+					跳转到第
+				</label>
+				<div   class="col-sm-1" style="text-align: right; padding:0;margin: 0" ><input class="form-control" name="pageNum" value="1" /></div>
+				<label class="control-label col-sm-1" style="text-align: left">页</label>
+			</div>
+		</form>
+	</body>
+
+</html>
+<script>
+	//页面加载完毕之后发送异步请求
+	$(function(){
+		loadData();
+		// 监听翻页
+		$("ul[class='pagination']>li").click(function(){
+			let num=$(this).attr("name");
+			$("input[name='pageNum']").val(num);
+			loadData();
+		});
+		// 监听全选
+		$("#all").click(function(){
+			if($(this).prop("checked")){
+				$("input[type='checkbox']").prop("checked","true")
+			}else{
+				$("input[type='checkbox']").removeProp("checked")
+			}
+		})
+		// 监听批量删除
+		$("#deletes").on("click",function(){
+			let adminsIdList = '';
+			$.each($("input[type='checkbox']:checked"),function(i,v){
+				if(!$(v).is($("#all")))
+					adminsIdList += $(v).attr("class")+"_";
+			})
+			deleteAdmins(adminsIdList);
+			return false;
+		})
+	});
+	//填充分页信息
+	function fillPageData(pageInfo) {
+		//填充信息
+		$("#total").html(pageInfo.total);
+		$("#pages").html(pageInfo.pages);
+		$("input[name='pageNum']").val(pageInfo.pageNum);
+		$("select[name='pageSize']").val(pageInfo.pageSize);
+		//设置按钮的属性值和样式
+		$("#firstPage").attr("name",1);
+		$("#prePage").attr("name",pageInfo.prePage);
+		$("#nextPage").attr("name",pageInfo.nextPage);
+		$("#lastPage").attr("name",pageInfo.pages);
+		$("#firstPage").removeClass("disabled");
+		$("#prePage").removeClass("disabled");
+		$("#nextPage").removeClass("disabled");
+		$("#lastPage").removeClass("disabled");
+		if(pageInfo.isFirstPage){//如果是第一页：上一页和首页禁用
+			$("#firstPage").addClass("disabled");
+			$("#prePage").addClass("disabled");
+		}
+		if(pageInfo.isLastPage){//如果已经是最后一页：下一页和末页禁用
+			$("#nextPage").addClass("disabled");
+			$("#lastPage").addClass("disabled");
+		}
+	}
+	//更新按钮
+	function updateAdmins(id) {
+		let pageNum=$("input[name='pageNum']").val();
+		let pageSize=$("select[name='pageSize']").val();
+		window.location.href="update.html?adminsId="+id+"&pageNum="+pageNum+"&pageSize="+pageSize;
+	}
+	//删除按钮
+	function deleteAdmins(id) {
+		if(confirm("确定要删除吗?")) {
+			//发起异步请求
+			$.ajax({
+				type: "POST",
+				url: myurl + "/admins/" + id + "?forwardUrl=" + forwardUrl, //RESTful风格的API定义
+				data: "_method=DELETE",
+				dataType:"json",
+				xhrFields: {
+				    withCredentials: true
+				},
+				crossDomain: true,
+				success: function (vo) {
+					if(vo.code==200){
+						loadData();
+						$("#all").removeProp("checked")
+					}else{
+						alert("删除失败！"+vo.msg);
+					}
+				}
+			});
+			return false;
+		}
+	}
+
+	String.prototype.GetValue= function(para) {
+		let reg = new RegExp("(^|&)"+ para +"=([^&]*)(&|$)");
+		let r = this.substr(this.indexOf("\?")+1).match(reg);
+		if (r!=null) return unescape(r[2]); return null;
+	}
+	//加载数据
+	var firstIn = true;
+	function loadData(){
+		let url = document.location.toString();
+		let pageNum;
+		let pageSize;
+		if(firstIn){
+			firstIn = false;
+			pageNum = url.GetValue("pageNum");
+			pageSize=url.GetValue("pageSize");
+		}
+		if(pageNum!=null&&$("input[name='pageNum']").val()!=null){
+			$("input[name='pageNum']").val(pageNum);
+		}
+		if(pageSize!=null&&$("select[name='pageSize']").val()!=null){
+			$("select[name='pageSize']").val(pageSize);
+		}
+		//alert($("#myForm").serialize())
+		$.ajax({
+			type: "GET",
+			url: myurl + "/admins?forwardUrl=" + forwardUrl,
+			data: $("#myForm").serialize(),//主要是分页和多条件参数数据
+			dataType:"json",
+			xhrFields: {
+			    withCredentials: true
+			},
+			crossDomain: true,
+			success: function(vo){
+				//alert( "Data Saved: " + vo );
+				let list=vo.pageInfo.list;
+				let str="";
+				for(let i=0;i<list.length;i++){
+					let obj=list[i];
+					let headImg=obj.headImg;
+					let adminId=obj.adminId;
+					let loginName=obj.loginName;
+					let petName=obj.petName;
+					let adminPwd="******";
+					let phone=obj.phone;
+					let roleId=obj.roleId==null?'1':obj.roleId;
+					let roleName=obj.adminrole.roleName;
+					let status=obj.status==2?'冻结':"正常";
+					let isDel=obj.isDel;
+					let btnStr="";
+					if(isDel==0){
+						btnStr='<button type="button" name="deleteBtn" class="btn btn-sm btn-danger" onclick="deleteAdmins('+adminId+')">删除</button>&nbsp;' +
+								'<button type="button" name="updateBtn" class="btn btn-sm btn-info" onclick="updateAdmins('+adminId+')">更新</button>&nbsp;';
+					}else{
+						btnStr='<button name="deleteBtn" class="btn btn-sm btn-danger disabled">已删除</button>';
+					}
+					str+='<tr>' +
+							'            <td><input type="checkbox" class="'+ adminId +'"/></td>' +
+							'            <td><img src="'+ forwardUrl +'/img/uploadFile/'+headImg+'"></td>' +
+							'            <td>'+loginName+'</td>' +
+							'            <td>'+petName+'</td>' +
+							'            <td>'+adminPwd+'</td>' +
+							'            <td>'+phone+'</td>' +
+							'            <td>'+roleName+'</td>' +
+							'            <td>'+status+'</td>' +
+							'            <td>'+btnStr+'</td>' +
+							'</tr>'
+				}
+				$("#tboby").html(str);
+				//填充分页数据
+				fillPageData(vo.pageInfo);
+			}
+		});
+	}
+</script>

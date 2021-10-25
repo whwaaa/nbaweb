@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>更新球队</title>
+		<script type="text/javascript" src="../../js/jquery-1.11.1.js"></script>
+		<script type="text/javascript" src="../../js/bootstrap.js"></script>
+		<script src="../../js/global.js"></script>
+		<link rel="stylesheet" type="text/css" href="../../css/bootstrap.css"></link>
+		<link rel="stylesheet" type="text/css" href="../../css/style.css"></link>
+		<style>
+			label span{color: #ff0000; padding-right: 5px;}
+		</style>
+	</head>
+
+	<body>
+		<h2>超级管理员专属——添加用户</h2>
+        <!--<form id="myFormImg" class="form-horizontal" action="/team/">
+            <div class="form-group">
+                <div class="col-sm-offset-1 col-sm-9">
+                    <img name="headImg" src=""/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-1 control-label">上传头像</label>
+                <div class="col-sm-3">
+                    <input id="logo" name="logo"  type="file" required/>
+                </div>
+            </div>
+        </form>-->
+        
+		<form id="myFormMsg" class="form-horizontal">
+			<!--springmvc的restful风格处理非get post方式请求必备参数-->
+			<!--<input name="_method"  type="hidden" value="PUT"/>-->	
+			<div class="form-group">
+				<label class="col-sm-1 control-label"><span>*</span>用户名</label>
+				<div class="col-sm-9">
+					<input required="required" name="loginName" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-1 control-label">密码</label>
+				<div class="col-sm-9">
+					<input name="adminPwd" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-1 control-label"><span>*</span>昵称</label>
+				<div class="col-sm-9">
+					<input required="" name="petName" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-1 control-label">电话号</label>
+				<div class="col-sm-9">
+					<input name="phone" class="form-control" />
+				</div>
+			</div>
+			<!--<div class="form-group">
+				<label class="col-sm-1 control-label">头像</label>
+				<div class="col-sm-2">
+					<input name="headImg" class="form-control"/>
+				</div>
+			</div>-->
+			<div class="form-group">
+				<label class="col-sm-1 control-label">角色</label>
+				<div class="col-sm-2">
+					<select name="roleId" class="form-control">
+         				<option value="-1">请选择角色</option>
+         				<option value="1">超级管理员</option>
+         				<option value="2">球队经理</option>
+         				<option value="3">主教练</option>
+			      	</select>
+				</div>
+			</div>
+			<!--<div class="form-group">
+				<label class="col-sm-1 control-label">状态</label>
+				<div class="col-sm-2">
+					<select name="status" class="form-control">
+         				<option value="-1">请选择状态</option>
+         				<option value="1">正常</option>
+         				<option value="2">已注销</option>
+			      	</select>
+				</div>
+			</div>-->
+			<div class="form-group">
+				<label class="col-sm-1 control-label"></label>
+				<div class="col-sm-9">
+					<button id="btnUpdate" type="button" class="btn btn-sm btn-info">提&nbsp;交</button>
+					<button type="reset"  class="btn btn-sm btn-warning">重&nbsp;置</button>
+				</div>
+			</div>
+		</form>		
+	</body>
+</html>
+<script>
+	String.prototype.GetValue= function(para) {
+		let reg = new RegExp("(^|&)"+ para +"=([^&]*)(&|$)");
+		let r = this.substr(this.indexOf("\?")+1).match(reg);
+		if (r!=null) return unescape(r[2]); return null;
+	}
+	$(function () {
+		//提交按钮的单击事件--实现真正的更新
+		$("#btnUpdate").click(function () {
+			$.ajax({
+				type: "POST",//这里必须写POST
+				url: myurl + "/admins?forwardUrl=" + forwardUrl,
+				data: $("#myFormMsg").serialize(),
+				dataType:"json",
+				success: function(vo){
+					if(vo.code==200) {
+						window.location.href = "list.html";
+					}else{
+						alert("更新失败！"+vo.msg);
+					}
+				}
+			});
+		});
+	});
+
+
+</script>
